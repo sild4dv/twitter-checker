@@ -35,14 +35,14 @@ class CheckerBot(discord.Client):
         await self.tree.sync()
 
     async def on_ready(self):
-        print(f"Bot online como {self.user}")
+        print(f"Bot online as {self.user}")
 
 
 bot = CheckerBot()
 
 
 def fonte(tweet) -> str:
-    return tweet.sourceLabel or "Desconhecido"
+    return tweet.sourceLabel or "Unknown"
 
 
 def resumo(texto: str, tamanho: int = 60) -> str:
@@ -68,17 +68,17 @@ def montar_embed(username: str, tweets) -> discord.Embed:
 
     # Veredito
     if not suspeitos:
-        veredito = f"✅ NORMAL — todos os {total} tweets vieram de clientes comuns"
+        veredito = f"✅ NORMAL — all {total} tweets came from common clients"
         cor = discord.Color.green()
     elif len(suspeitos) / total > 0.5:
-        veredito = f"🚨 ALTO RISCO — {len(suspeitos)}/{total} tweet(s) de fontes incomuns"
+        veredito = f"🚨 HIGH RISK — {len(suspeitos)}/{total} tweet(s) from unusual sources"
         cor = discord.Color.dark_red()
     else:
-        veredito = f"SUSPEITO — {len(suspeitos)}/{total} tweet(s) de fontes incomuns"
+        veredito = f"⚠️ SUSPICIOUS — {len(suspeitos)}/{total} tweet(s) from unusual sources"
         cor = discord.Color.red()
 
     embed = discord.Embed(
-        title=f"🔎 @{username} — Últimos {total} tweets",
+        title=f"🔎 @{username} — Last {total} tweets",
         url=f"https://x.com/{username}",
         color=cor,
     )
@@ -96,7 +96,7 @@ def montar_embed(username: str, tweets) -> discord.Embed:
         ]
         restantes = len(suspeitos) - MAX_SUSPEITOS_EXIBIDOS
         if restantes > 0:
-            linhas_susp.append(f"…e mais {restantes}")
+            linhas_susp.append(f"…and {restantes} more")
         embed.add_field(
             name=f"🚨 SUSPICIOUS ({len(suspeitos)})",
             value="\n".join(linhas_susp)[:1024],
@@ -104,32 +104,32 @@ def montar_embed(username: str, tweets) -> discord.Embed:
         )
 
     embed.add_field(name="⚡ Verdict", value=veredito, inline=False)
-    embed.set_footer(text="provider: twscrape • análise por sourceLabel")
+    embed.set_footer(text="provider: twscrape • analysis by sourceLabel")
     return embed
 
 
-@bot.tree.command(name="check", description="Analisa a origem dos últimos tweets de uma conta")
-@app_commands.describe(usuario="O @ da conta (com ou sem @)")
-async def check(interaction: discord.Interaction, usuario: str):
+@bot.tree.command(name="check", description="Analyzes where an account's latest tweets were posted from")
+@app_commands.describe(username="The account's @ (with or without @)")
+async def check(interaction: discord.Interaction, username: str):
     await interaction.response.defer(thinking=True)
-    usuario = usuario.strip().lstrip("@")
+    usuario = username.strip().lstrip("@")
 
     try:
         user, tweets = await asyncio.wait_for(buscar_tweets(usuario), timeout=TIMEOUT_BUSCA)
     except asyncio.TimeoutError:
         await interaction.followup.send(
-            "⏱️ Demorou demais. Provavelmente as contas do twscrape estão sem limite ou deslogadas."
+            "⏱️ Timed out. The twscrape accounts are probably rate-limited or logged out."
         )
         return
     except Exception as e:
-        await interaction.followup.send(f"❌ Erro ao buscar tweets: `{e}`")
+        await interaction.followup.send(f"❌ Error fetching tweets: `{e}`")
         return
 
     if user is None:
-        await interaction.followup.send(f"❌ Conta **@{usuario}** não encontrada.")
+        await interaction.followup.send(f"❌ Account **@{usuario}** not found.")
         return
     if not tweets:
-        await interaction.followup.send(f"ℹ️ **@{user.username}** não tem tweets visíveis.")
+        await interaction.followup.send(f"ℹ️ **@{user.username}** has no visible tweets.")
         return
 
     await interaction.followup.send(embed=montar_embed(user.username, tweets))
@@ -137,5 +137,5 @@ async def check(interaction: discord.Interaction, usuario: str):
 
 if __name__ == "__main__":
     if not DISCORD_TOKEN:
-        raise SystemExit("Defina DISCORD_TOKEN no arquivo .env")
+        raise SystemExit("Set DISCORD_TOKEN in the .env file")
     bot.run(DISCORD_TOKEN)
