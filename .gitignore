@@ -1,0 +1,11 @@
+# Segredos — NUNCA commitar
+.env
+accounts.db
+accounts.db-*
+*.db
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
