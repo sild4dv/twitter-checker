@@ -1,40 +1,40 @@
 # 🔎 Twitter Checker
 
-Bot de Discord que analisa de quais clientes (Web, iPhone, Android, TweetDeck, apps de terceiros…) foram publicados os últimos tweets de uma conta do X/Twitter e aponta origens incomuns que **podem** indicar que a conta foi comprometida.
+A Discord bot that analyzes which clients (Web, iPhone, Android, TweetDeck, third-party apps…) an X/Twitter account's latest tweets were posted from, and flags unusual sources that **may** indicate the account has been compromised.
 
 ```
-/check usuario:wallstengine
+/check username:wallstengine
 ```
 
-O bot responde com um embed contendo:
+The bot replies with an embed containing:
 
-- **Sources** — quantos tweets vieram de cada cliente (✅ comum / ⚠️ incomum)
-- **Suspicious** — os tweets de origem incomum, com link
-- **Verdict** — `NORMAL`, `SUSPEITO` ou `ALTO RISCO`
+- **Sources** — how many tweets came from each client (✅ common / ⚠️ unusual)
+- **Suspicious** — the tweets posted from unusual sources, with links
+- **Verdict** — `NORMAL`, `SUSPICIOUS` or `HIGH RISK`
 
-## Como funciona
+## How it works
 
-O X removeu o rótulo de origem da interface, mas o campo `source` ainda vem nas respostas da API GraphQL interna usada pelo site. O bot usa o [twscrape](https://github.com/vladkens/twscrape) para buscar os tweets com uma conta logada (via cookies) e lê o campo `sourceLabel` de cada um.
+X removed the source label from its interface, but the `source` field still comes back in the responses of the internal GraphQL API used by the website. The bot uses [twscrape](https://github.com/vladkens/twscrape) to fetch tweets with a logged-in account (via cookies) and reads the `sourceLabel` field of each one.
 
-> ⚠️ O veredito é uma **heurística**, não uma prova. Muitas contas legítimas (notícias, empresas, criadores) usam TweetDeck/X Pro ou ferramentas de agendamento. Use o resultado como um sinal para investigar, nunca como acusação.
+> ⚠️ The verdict is a **heuristic**, not proof. Many legitimate accounts (news outlets, companies, creators) use TweetDeck/X Pro or scheduling tools. Treat the result as a signal to investigate, never as an accusation.
 
-## Requisitos
+## Requirements
 
 - Python 3.10+
-- Um bot do Discord ([Developer Portal](https://discord.com/developers/applications))
-- Uma conta **secundária** do X (pode ser suspensa — não use sua conta principal)
+- A Discord bot ([Developer Portal](https://discord.com/developers/applications))
+- A **secondary** X account (it may get suspended — don't use your main account)
 
-## Instalação
+## Installation
 
 ```bash
-git clone https://github.com/SEU_USUARIO/twitter-checker.git
+git clone https://github.com/YOUR_USERNAME/twitter-checker.git
 cd twitter-checker
 python -m pip install -r requirements.txt
 ```
 
-### 1. Token do Discord
+### 1. Discord token
 
-Copie o arquivo de exemplo e cole o token do bot (Developer Portal → sua aplicação → **Bot** → **Reset Token**):
+Copy the example file and paste your bot token (Developer Portal → your application → **Bot** → **Reset Token**):
 
 ```bash
 cp .env.example .env        # Linux/Mac
@@ -42,52 +42,52 @@ copy .env.example .env      # Windows
 ```
 
 ```
-DISCORD_TOKEN=seu_token_aqui
+DISCORD_TOKEN=your_token_here
 ```
 
-Convide o bot para o servidor em **OAuth2 → URL Generator** com os escopos `bot` e `applications.commands` e as permissões *Send Messages* e *Embed Links*.
+Invite the bot to your server via **OAuth2 → URL Generator** with the `bot` and `applications.commands` scopes and the *Send Messages* and *Embed Links* permissions.
 
-### 2. Conta do X
+### 2. X account
 
-Logado no x.com com a conta secundária, abra o DevTools (F12) → **Application** → **Cookies** → `https://x.com` e copie os valores de `auth_token` e `ct0`. Depois:
+While logged in to x.com with your secondary account, open DevTools (F12) → **Application** → **Cookies** → `https://x.com` and copy the values of `auth_token` and `ct0`. Then run:
 
 ```bash
-python add_account.py NOME_DA_CONTA "auth_token=VALOR; ct0=VALOR"
+python add_account.py ACCOUNT_NAME "auth_token=VALUE; ct0=VALUE"
 ```
 
-Deve aparecer `active: True`. Não clique em "Sair" nessa conta no navegador, ou os cookies param de funcionar. Para mais estabilidade, adicione 2–3 contas: o twscrape alterna entre elas.
+You should see `active: True`. Don't click "Log out" on that account in the browser, or the cookies will stop working. For better stability, add 2–3 accounts: twscrape rotates between them.
 
-### 3. Rodar
+### 3. Run
 
 ```bash
 python bot.py
 ```
 
-No Windows, você pode usar o `iniciar.bat`, que reinicia o bot automaticamente se ele cair.
+On Windows, you can use `iniciar.bat`, which automatically restarts the bot if it crashes.
 
-## Personalização
+## Customization
 
-No topo do `bot.py`:
+At the top of `bot.py`:
 
-| Variável | O que faz |
+| Variable | What it does |
 |---|---|
-| `FONTES_NORMAIS` | Clientes considerados comuns (✅). Qualquer outro é marcado com ⚠️ |
-| `LIMITE_TWEETS` | Quantos tweets analisar (padrão: 20) |
-| `MAX_SUSPEITOS_EXIBIDOS` | Quantos tweets suspeitos listar no embed |
-| `TIMEOUT_BUSCA` | Tempo máximo de espera por consulta, em segundos |
+| `FONTES_NORMAIS` | Clients considered common (✅). Any other client is flagged with ⚠️ |
+| `LIMITE_TWEETS` | How many tweets to analyze (default: 20) |
+| `MAX_SUSPEITOS_EXIBIDOS` | How many suspicious tweets to list in the embed |
+| `TIMEOUT_BUSCA` | Maximum wait time per lookup, in seconds |
 
-## Limitações
+## Limitations
 
-- **IP e localização não estão disponíveis.** O X não expõe esses dados para terceiros.
-- **Pode quebrar sem aviso.** O X pode mudar a API interna ou remover o campo `source` a qualquer momento. Nesse caso, atualize o twscrape (`pip install -U twscrape`).
-- **Limites de uso.** Cada `/check` faz algumas requisições, e o X limita requisições e leitura de posts por conta. Uso intenso pode bloquear temporariamente a conta.
+- **IP addresses and locations are not available.** X does not expose this data to third parties.
+- **It may break without notice.** X can change its internal API or remove the `source` field at any time. If that happens, update twscrape (`pip install -U twscrape`).
+- **Usage limits.** Each `/check` makes a few requests, and X limits requests and post reads per account. Heavy use may temporarily lock the account.
 
-## Aviso legal
+## Disclaimer
 
-Este projeto acessa a API interna do X por meio de scraping, o que viola os [Termos de Serviço do X](https://x.com/tos). Ele é disponibilizado para fins educacionais e de pesquisa. Quem o utiliza assume total responsabilidade pelo uso, incluindo a possível suspensão das contas envolvidas. Os autores não têm afiliação com o X Corp.
+This project accesses X's internal API through scraping, which violates the [X Terms of Service](https://x.com/tos). It is provided for educational and research purposes only. Anyone who uses it takes full responsibility for doing so, including the possible suspension of the accounts involved. The authors are not affiliated with X Corp.
 
-**Nunca commite o `.env` ou o `accounts.db`** — eles contêm o token do bot e os cookies da conta do X. O `.gitignore` incluído já os exclui.
+**Never commit `.env` or `accounts.db`** — they contain the bot token and the X account cookies. The included `.gitignore` already excludes them.
 
-## Licença
+## License
 
 [MIT](LICENSE)
